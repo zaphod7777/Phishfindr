@@ -44,3 +44,28 @@ phishfindr
    └─ normalizer.py
 
 ```
+```
+phishfindr
+├─ README.md
+├─ __init__.py
+├─ collectors
+│  ├─ __init__.py
+│  └─ o365_collector.py
+├─ outputs
+│  ├─ __init__.py
+│  ├─ json_output.py
+│  └─ opensearch_output.py
+├─ pipeline.py
+├─ pytest.ini
+├─ requirements.txt
+├─ tests
+│  ├─ __init__.py
+│  ├─ test_collector_mock.py
+│  ├─ test_json_output.py
+│  ├─ test_normalizer.py
+│  └─ test_pipeline_once.py
+└─ utils
+   ├─ __init__.py
+   └─ normalizer.py
+
+```
