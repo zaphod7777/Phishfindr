@@ -2,33 +2,22 @@
 import os
 import json
 import logging
-from datetime import datetime
 from pathlib import Path
-
+from datetime import datetime, timezone
 
 class JSONOutput:
-    def __init__(self, out_dir="events"):
-        self.out_dir = Path(out_dir)
-        self.out_dir.mkdir(parents=True, exist_ok=True)
-        logging.debug(f"JSONOutput initialized with out_dir={self.out_dir}")
-
-    def _write(self, event):
-        """Internal write helper — appends one event to a JSON file."""
-        ts = datetime.utcnow().strftime("%Y-%m-%dT%H-%M-%S")
-        out_file = self.out_dir / f"{ts}.json"
-
-        try:
-            with open(out_file, "a", encoding="utf-8") as f:
-                json.dump(event, f, ensure_ascii=False)
-                f.write("\n")
-            logging.debug(f"Wrote event to {out_file}")
-        except Exception as e:
-            logging.exception(f"Failed to write event: {e}")
+    def __init__(self, filepath):
+        self.filepath = filepath
+        # Ensure parent directory exists
+        parent_dir = os.path.dirname(self.filepath)
+        if parent_dir:
+            os.makedirs(parent_dir, exist_ok=True)
 
     def write_event(self, event):
-        """Primary API for writing a single event."""
-        self._write(event)
+        # Add a timestamp if not already present
+        if "timestamp" not in event:
+            event["timestamp"] = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H-%M-%S")
+        # Append JSON line to file
+        with open(self.filepath, "a", encoding="utf-8") as f:
+            f.write(json.dumps(event) + "\n")
 
-    def write(self, event):
-        """Alias for write_event (for consistency across outputs)."""
-        self.write_event(event)

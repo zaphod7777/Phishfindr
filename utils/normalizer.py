@@ -2,23 +2,25 @@
 import json
 import logging
 
-def normalize_event(event):
-    """
-    Ensure event is a dict.
-    - If it's already a dict, return as-is.
-    - If it's a JSON string, parse into dict.
-    - If it's something else, wrap in a dict.
-    """
-    if isinstance(event, dict):
-        return event
+from datetime import datetime, timezone
 
-    if isinstance(event, str):
-        try:
-            return json.loads(event)
-        except Exception:
-            logging.warning(f"Event string not valid JSON, wrapping: {event}")
-            return {"raw_event": event}
+def normalize_event(event: dict) -> dict:
+    """
+    Normalize a raw event:
+    - Adds a timestamp in ISO8601 UTC format
+    - Maps 'Operation' -> 'operation'
+    - Maps 'UserId' -> 'user'
+    """
+    normalized = dict(event)  # shallow copy
 
-    # fallback
-    logging.warning(f"Unexpected event type {type(event)}, wrapping")
-    return {"raw_event": str(event)}
+    # Add timestamp if missing
+    if "timestamp" not in normalized:
+        normalized["timestamp"] = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H-%M-%S")
+
+    # Normalize keys
+    if "Operation" in normalized:
+        normalized["operation"] = normalized.pop("Operation")
+    if "UserId" in normalized:
+        normalized["user"] = normalized.pop("UserId")
+
+    return normalized
