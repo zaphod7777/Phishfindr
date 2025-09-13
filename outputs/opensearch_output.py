@@ -1,44 +1,68 @@
 #!/opt/phishfindr/venv/bin/python
 import logging
 #from opensearch-py import OpenSearch
-from opensearchpy import OpenSearch
 from datetime import datetime
+from opensearchpy import OpenSearch, helpers
 
+BASE_INDEX_NAME = "phishfindr-events"
+
+INDEX_MAPPING = {
+    "mappings": {
+        "properties": {
+            "timestamp": {"type": "date"},
+            "event_type": {"type": "keyword"},
+            "status": {"type": "keyword"},
+            "status_detail": {"type": "keyword"},
+            "user_id": {"type": "keyword"},
+            "user_type": {"type": "integer"},
+            "ip_address": {"type": "ip"},
+            "workload": {"type": "keyword"},
+            "user_agent": {"type": "text"},
+            "request_type": {"type": "keyword"},
+            "os": {"type": "keyword"},
+            "browser": {"type": "keyword"},
+            "session_id": {"type": "keyword"},
+            "application_id": {"type": "keyword"},
+            "record_type": {"type": "integer"},
+            "version": {"type": "integer"},
+            "error_number": {"type": "keyword"}
+        }
+    }
+}
 
 class OpenSearchOutput:
-    def __init__(
-        self,
-        hosts=["http://localhost:9200"],
-        index_prefix="o365-events",
-        username=None,
-        password=None,
-        use_ssl=False,
-        verify_certs=True,
-    ):
-        self.index_prefix = index_prefix
+    def __init__(self, hosts=["http://localhost:9200"], base_index=BASE_INDEX_NAME):
+        self.client = OpenSearch(hosts=hosts)
+        self.base_index = base_index
 
-        auth = (username, password) if username and password else None
+    def _get_daily_index(self):
+        """Generate today's index name (e.g. phishfindr-events-2025.09.11)."""
+        date_str = datetime.utcnow().strftime("%Y.%m.%d")
+        return f"{self.base_index}-{date_str}"
 
-        self.client = OpenSearch(
-            hosts=hosts,
-            http_auth=auth,
-            use_ssl=use_ssl,
-            verify_certs=verify_certs,
-        )
-
-        logging.info(f"OpenSearchOutput initialized for {hosts} with prefix {index_prefix}")
-
-    def _get_index_name(self):
-        """Daily index rotation, e.g. o365-events-2025.09.09"""
-        today = datetime.utcnow().strftime("%Y.%m.%d")
-        return f"{self.index_prefix}-{today}"
+    def _ensure_index(self, index_name):
+        """Check if index exists, create with mapping if missing."""
+        if not self.client.indices.exists(index=index_name):
+            self.client.indices.create(index=index_name, body=INDEX_MAPPING)
 
     def write(self, event):
-        """Write a single event to OpenSearch."""
-        index_name = self._get_index_name()
+        """Insert a single normalized event (useful for debugging)."""
+        index_name = self._get_daily_index()
+        self._ensure_index(index_name)
+        self.client.index(index=index_name, body=event)
 
-        try:
-            resp = self.client.index(index=index_name, body=event)
-            logging.debug(f"Indexed event into {index_name}, result={resp.get('result')}")
-        except Exception as e:
-            logging.exception(f"Failed to index event into OpenSearch: {e}")
+    def bulk_write(self, events):
+        """
+        Insert multiple normalized events in one bulk request.
+        Expects `events` to be a list of dicts.
+        """
+        index_name = self._get_daily_index()
+        self._ensure_index(index_name)
+
+        actions = [
+            {"_index": index_name, "_source": event}
+            for event in events
+        ]
+
+        success, failed = helpers.bulk(self.client, actions, stats_only=True)
+        return {"success": success, "failed": failed}
