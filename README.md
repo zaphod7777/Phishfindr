@@ -18,23 +18,64 @@ analysis in JSON, OpenSearch, or PostgreSQL.
 ```
 phishfindr
 ├─ README.md
-├─ __init__.py
+├─ __main__.py
 ├─ collectors
 │  ├─ __init__.py
 │  └─ o365_collector.py
+├─ export.py
 ├─ outputs
 │  ├─ __init__.py
 │  ├─ json_output.py
-│  └─ opensearch_output.py
+│  ├─ opensearch_output.py
+│  └─ postgres_output.py
+├─ phishfindr
+│  ├─ __init__.py
+│  └─ pipeline.py
 ├─ pipeline.py
 ├─ pytest.ini
 ├─ requirements.txt
+├─ run_pipeline.sh
 ├─ tests
 │  ├─ __init__.py
 │  ├─ test_collector_mock.py
 │  ├─ test_json_output.py
 │  ├─ test_normalizer.py
-│  └─ test_pipeline_once.py
+│  ├─ test_normalizer_opensearch.py
+│  ├─ test_pipeline_once.py
+│  └─ test_postgres_output.py
+└─ utils
+   ├─ __init__.py
+   └─ normalizer.py
+
+```
+```
+phishfindr
+├─ README.md
+├─ __main__.py
+├─ collectors
+│  ├─ __init__.py
+│  └─ o365_collector.py
+├─ export.py
+├─ outputs
+│  ├─ __init__.py
+│  ├─ json_output.py
+│  ├─ opensearch_output.py
+│  └─ postgres_output.py
+├─ phishfindr
+│  ├─ __init__.py
+│  └─ pipeline.py
+├─ pipeline.py
+├─ pytest.ini
+├─ requirements.txt
+├─ run_pipeline.sh
+├─ tests
+│  ├─ __init__.py
+│  ├─ test_collector_mock.py
+│  ├─ test_json_output.py
+│  ├─ test_normalizer.py
+│  ├─ test_normalizer_opensearch.py
+│  ├─ test_pipeline_once.py
+│  └─ test_postgres_output.py
 └─ utils
    ├─ __init__.py
    └─ normalizer.py
