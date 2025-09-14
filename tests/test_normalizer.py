@@ -1,7 +1,7 @@
 #!/opt/phishfindr/venv/bin/python
-# utils/normalizer.py
+
 # tests/test_normalizer.py
-from utils.normalizer import normalize_event
+from phishfindr.utils.normalizer import normalize_event
 
 def test_normalizer_adds_standard_fields():
     raw_event = {"UserId": "carol", "Operation": "UserLoggedIn"}

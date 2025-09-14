@@ -1,56 +1,27 @@
-#!/opt/phishfindr/venv/bin/python
-import argparse
-import logging
-from collectors.o365_collector import O365Collector
-from outputs.json_output import JSONOutput
-from outputs.opensearch_output import OpenSearchOutput
+#!/usr/bin/env python3
+"""
+Top-level launcher so you can run: ./pipeline.py --output postgres --once
 
+This makes sure the project root is on sys.path so `import phishfindr` works
+even when invoking this script directly.
+"""
+from __future__ import annotations
+import os
+import sys
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-)
+# Ensure project root (directory containing this file) is on sys.path first
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
 
-def run_pipeline(once: bool = False, output_backend: str = "json"):
-    collector = O365Collector(interval=300)  # poll every 5 minutes
-
-    if output_backend == "json":
-        output = JSONOutput()
-    elif output_backend == "opensearch":
-        output = OpenSearchOutput()
-    else:
-        raise ValueError(f"Unsupported output backend: {output_backend}")
-
-    logging.info("Starting pipeline with output=%s...", output_backend)
-
-    try:
-        if once:
-            # Fetch once and exit
-            for event in collector.collect():
-                output.write(event)
-            logging.info("One-shot pipeline run complete.")
-        else:
-            # Continuous polling
-            for event in collector.run_forever():
-                output.write(event)
-    except KeyboardInterrupt:
-        logging.info("Pipeline stopped by user.")
-
+# Now import package entrypoint (must exist at phishfindr/pipeline.py with main())
+try:
+    from phishfindr.pipeline import main
+except Exception as e:
+    # Helpful error if package can't be imported
+    print("Failed to import phishfindr pipeline module:", e, file=sys.stderr)
+    sys.exit(3)
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="PhishFinder O365 pipeline")
-    parser.add_argument(
-        "--once",
-        action="store_true",
-        help="Run pipeline once and exit (instead of polling forever)"
-    )
-    parser.add_argument(
-        "--output",
-        choices=["json", "opensearch"],
-        default="json",
-        help="Select output backend (default: json)"
-    )
-    args = parser.parse_args()
-
-    run_pipeline(once=args.once, output_backend=args.output)
-
+    # Pass CLI args (exclude program name)
+    sys.exit(main(sys.argv[1:]))

@@ -2,7 +2,8 @@
 # tests/test_normalizer_opensearch.py
 
 import pytest
-from utils.normalizer import normalize_event
+from phishfindr.utils.normalizer import normalize_event
+
 
 
 @pytest.fixture
